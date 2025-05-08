@@ -1,6 +1,7 @@
 import os
 from openai import AzureOpenAI
 from dotenv import load_dotenv
+import json
 
 # .env-Datei laden
 load_dotenv()
@@ -14,31 +15,34 @@ class APIClient:
             api_version="2024-02-01"  # Beispiel: API-Version anpassen
         )
 
-    def get_questions(self, topic):
-        """Generiert Quizfragen basierend auf dem Thema."""
+    def get_questions(self, topic, num_questions=20):
+        """Generiert mehrere Quizfragen basierend auf dem Thema."""
         response = self.client.chat.completions.create(
-            max_tokens=100,
+            max_tokens=2000,
             model="gpt-4o-mini",  # Ersetze durch den richtigen Modellnamen oder Deployment-Namen
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that generates quiz questions."},
-                {"role": "user", "content": f"Generate a quiz question about {topic}."}
+                {"role": "user", "content": f"Generate {num_questions} quiz questions about {topic} in JSON format. Each question should include a 'question', 'answers' (list of 4 options), and 'correct_answer'."}
             ]
         )
 
-        # Die Antwort der API ist ein String. Wir müssen sie in ein Dictionary umwandeln.
+        # Die Antwort der API ist ein String. Wir müssen sie in ein Python-Objekt umwandeln.
         raw_text = response.choices[0].message.content.strip()
 
-        # Beispiel: Die API sollte eine strukturierte Antwort zurückgeben.
-        # Wir simulieren hier die Verarbeitung der Antwort.
-        # Ersetze dies durch die tatsächliche Logik, falls die API anders antwortet.
-        question_data = {
-            "question": "What is the capital of France?",
-            "answers": ["Berlin", "Madrid", "Paris", "Rome"],
-            "correct_answer": "Paris"
-        }
+        # Debugging: API-Antwort ausgeben
+        print("API Response:", raw_text)
 
-        # Falls die API bereits ein JSON-ähnliches Format zurückgibt, kannst du `json.loads` verwenden:
-        # import json
-        # question_data = json.loads(raw_text)
+        # JSON-Block extrahieren
+        start_index = raw_text.find("[")
+        end_index = raw_text.rfind("]") + 1
+        if start_index == -1 or end_index == -1:
+            raise ValueError("No valid JSON array found in the API response")
 
-        return question_data
+        json_text = raw_text[start_index:end_index]
+
+        try:
+            questions = json.loads(json_text)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON response: {str(e)}")
+
+        return questions

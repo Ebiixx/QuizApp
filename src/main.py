@@ -26,11 +26,15 @@ class MainWindow(QMainWindow):
             "Geography"
         ]
 
-        self.current_question = None
+        self.questions = []  # Liste der Fragen
+        self.current_question_index = 0  # Index der aktuellen Frage
         self.correct_answer = None
 
         self.setup_ui()
         self.setup_connections()
+
+        # Standardthema setzen
+        self.select_topic()
 
     def setup_ui(self):
         # Themen in die ComboBox laden
@@ -49,48 +53,54 @@ class MainWindow(QMainWindow):
 
     def start_quiz(self):
         selected_topic = self.topic_selector.get_selected_topic()
-        if selected_topic:
-            # Spinner anzeigen
-            progress_dialog = QProgressDialog("Generating quiz...", None, 0, 0, self)
-            progress_dialog.setWindowTitle("Please wait")
-            progress_dialog.setCancelButton(None)
-            progress_dialog.setModal(True)
-            progress_dialog.show()
-
-            try:
-                # Fragen abrufen
-                question_data = self.quiz_manager.fetch_questions(selected_topic)
-                progress_dialog.close()  # Spinner schließen
-                self.display_question(question_data)
-            except Exception as e:
-                progress_dialog.close()  # Spinner schließen
-                QMessageBox.critical(
-                    self,
-                    "Error",
-                    f"An error occurred while fetching questions:\n{str(e)}"
-                )
-        else:
+        if not selected_topic:
             QMessageBox.warning(self, "Warning", "Please select a topic.")
+            return
 
-    def display_question(self, question_data):
-        # Beispiel: Frage und Antworten aus den Daten extrahieren
-        self.current_question = question_data["question"]
-        self.correct_answer = question_data["correct_answer"]
-        answers = question_data["answers"]
+        # Spinner anzeigen
+        progress_dialog = QProgressDialog("Generating quiz...", None, 0, 0, self)
+        progress_dialog.setWindowTitle("Please wait")
+        progress_dialog.setCancelButton(None)
+        progress_dialog.setModal(True)
+        progress_dialog.show()
 
-        # Frage und Antworten in der UI anzeigen
-        self.ui.questionLabel.setText(self.current_question)
-        self.ui.answer1.setText(answers[0])
-        self.ui.answer2.setText(answers[1])
-        self.ui.answer3.setText(answers[2])
-        self.ui.answer4.setText(answers[3])
+        try:
+            # Mehrere Fragen abrufen
+            self.questions = self.quiz_manager.fetch_questions(selected_topic, num_questions=20)
+            self.current_question_index = 0
+            progress_dialog.close()  # Spinner schließen
+            self.display_question()
+        except Exception as e:
+            progress_dialog.close()  # Spinner schließen
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"An error occurred while fetching questions:\n{str(e)}"
+            )
 
-        self.ui.questionLabel.show()
-        self.ui.answer1.show()
-        self.ui.answer2.show()
-        self.ui.answer3.show()
-        self.ui.answer4.show()
-        self.ui.submitButton.show()
+    def display_question(self):
+        # Prüfen, ob noch Fragen übrig sind
+        if self.current_question_index < len(self.questions):
+            question_data = self.questions[self.current_question_index]
+            self.current_question = question_data["question"]
+            self.correct_answer = question_data["correct_answer"]
+            answers = question_data["answers"]
+
+            # Frage und Antworten in der UI anzeigen
+            self.ui.questionLabel.setText(self.current_question)
+            self.ui.answer1.setText(answers[0])
+            self.ui.answer2.setText(answers[1])
+            self.ui.answer3.setText(answers[2])
+            self.ui.answer4.setText(answers[3])
+
+            self.ui.questionLabel.show()
+            self.ui.answer1.show()
+            self.ui.answer2.show()
+            self.ui.answer3.show()
+            self.ui.answer4.show()
+            self.ui.submitButton.show()
+        else:
+            QMessageBox.information(self, "Quiz Completed", "You have completed the quiz!")
 
     def check_answer(self):
         # Überprüfen, welche Antwort ausgewählt wurde
@@ -109,8 +119,16 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "Wrong!", f"Wrong answer! The correct answer was: {self.correct_answer}")
 
+        # Nächste Frage anzeigen
+        self.current_question_index += 1
+        self.display_question()
+
     def select_topic(self):
-        self.topic_selector.set_selected_topic(self.ui.topicComboBox.currentText())
+        # Setze das Standardthema, falls keines ausgewählt wurde
+        selected_topic = self.ui.topicComboBox.currentText()
+        if not selected_topic:
+            selected_topic = self.topics[0]  # Erstes Thema als Standard
+        self.topic_selector.set_selected_topic(selected_topic)
 
 def main():
     app = QApplication(sys.argv)
