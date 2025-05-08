@@ -17,6 +17,34 @@ class Ui_MainWindow(object):
         self.startButton.setGeometry(QtCore.QRect(50, 100, 100, 30))
         self.startButton.setObjectName("startButton")
 
+        # Question label
+        self.questionLabel = QtWidgets.QLabel(self.centralwidget)
+        self.questionLabel.setGeometry(QtCore.QRect(50, 150, 700, 50))
+        self.questionLabel.setWordWrap(True)
+        self.questionLabel.setObjectName("questionLabel")
+
+        # Radio buttons for answers
+        self.answer1 = QtWidgets.QRadioButton(self.centralwidget)
+        self.answer1.setGeometry(QtCore.QRect(50, 220, 700, 30))
+        self.answer1.setObjectName("answer1")
+
+        self.answer2 = QtWidgets.QRadioButton(self.centralwidget)
+        self.answer2.setGeometry(QtCore.QRect(50, 260, 700, 30))
+        self.answer2.setObjectName("answer2")
+
+        self.answer3 = QtWidgets.QRadioButton(self.centralwidget)
+        self.answer3.setGeometry(QtCore.QRect(50, 300, 700, 30))
+        self.answer3.setObjectName("answer3")
+
+        self.answer4 = QtWidgets.QRadioButton(self.centralwidget)
+        self.answer4.setGeometry(QtCore.QRect(50, 340, 700, 30))
+        self.answer4.setObjectName("answer4")
+
+        # Submit button
+        self.submitButton = QtWidgets.QPushButton(self.centralwidget)
+        self.submitButton.setGeometry(QtCore.QRect(50, 400, 100, 30))
+        self.submitButton.setObjectName("submitButton")
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -25,3 +53,4 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Quiz App"))
         self.startButton.setText(_translate("MainWindow", "Start Quiz"))
+        self.submitButton.setText(_translate("MainWindow", "Submit"))
