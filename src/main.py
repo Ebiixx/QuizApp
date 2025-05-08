@@ -1,5 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog, QLabel
+from PyQt5 import QtCore
 from components.quiz_manager import QuizManager
 from components.topic_selector import TopicSelector
 from components.api_client import APIClient
@@ -45,6 +46,13 @@ class MainWindow(QMainWindow):
         self.ui.answer3.hide()
         self.ui.answer4.hide()
         self.ui.submitButton.hide()
+
+        # Punkteanzeige hinzufügen
+        self.ui.scoreLabel = QLabel(self)
+        self.ui.scoreLabel.setGeometry(700, 10, 80, 30)  # Oben rechts
+        self.ui.scoreLabel.setText("Score: 0")
+        self.ui.scoreLabel.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.ui.scoreLabel.show()
 
     def setup_connections(self):
         self.ui.startButton.clicked.connect(self.start_quiz)
@@ -115,13 +123,31 @@ class MainWindow(QMainWindow):
             selected_answer = self.ui.answer4.text()
 
         if selected_answer == self.correct_answer:
-            QMessageBox.information(self, "Correct!", "Your answer is correct!")
+            self.show_feedback("Correct!", "green")
+            self.update_score()
         else:
-            QMessageBox.warning(self, "Wrong!", f"Wrong answer! The correct answer was: {self.correct_answer}")
+            self.show_feedback(f"Wrong! Correct: {self.correct_answer}", "red")
 
         # Nächste Frage anzeigen
         self.current_question_index += 1
+        self.reset_answers()
         self.display_question()
+
+    def reset_answers(self):
+        self.ui.answer1.setAutoExclusive(False)
+        self.ui.answer2.setAutoExclusive(False)
+        self.ui.answer3.setAutoExclusive(False)
+        self.ui.answer4.setAutoExclusive(False)
+
+        self.ui.answer1.setChecked(False)
+        self.ui.answer2.setChecked(False)
+        self.ui.answer3.setChecked(False)
+        self.ui.answer4.setChecked(False)
+
+        self.ui.answer1.setAutoExclusive(True)
+        self.ui.answer2.setAutoExclusive(True)
+        self.ui.answer3.setAutoExclusive(True)
+        self.ui.answer4.setAutoExclusive(True)
 
     def select_topic(self):
         # Setze das Standardthema, falls keines ausgewählt wurde
@@ -129,6 +155,21 @@ class MainWindow(QMainWindow):
         if not selected_topic:
             selected_topic = self.topics[0]  # Erstes Thema als Standard
         self.topic_selector.set_selected_topic(selected_topic)
+
+    def show_feedback(self, message, color="green"):
+        self.ui.feedbackLabel = QLabel(self)
+        self.ui.feedbackLabel.setGeometry(50, 450, 300, 30)  # Position im UI
+        self.ui.feedbackLabel.setText(message)
+        self.ui.feedbackLabel.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: bold;")
+        self.ui.feedbackLabel.show()
+
+        # Feedback nach 3 Sekunden ausblenden
+        QtCore.QTimer.singleShot(3000, self.ui.feedbackLabel.hide)
+
+    def update_score(self):
+        current_score = int(self.ui.scoreLabel.text().split(": ")[1])
+        current_score += 1
+        self.ui.scoreLabel.setText(f"Score: {current_score}")
 
 def main():
     app = QApplication(sys.argv)
