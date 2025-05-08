@@ -1,26 +1,15 @@
 class QuizManager:
     def __init__(self, api_client):
         self.api_client = api_client
-        self.questions = []
-        self.current_question_index = 0
-        self.user_answers = []
 
     def fetch_questions(self, topic):
-        self.questions = self.api_client.get_questions(topic)
-        self.current_question_index = 0
-        self.user_answers = []
+        """Ruft eine Frage und Antworten basierend auf dem Thema ab."""
+        response = self.api_client.get_questions(topic)
 
-    def get_current_question(self):
-        if self.questions and self.current_question_index < len(self.questions):
-            return self.questions[self.current_question_index]
-        return None
-
-    def submit_answer(self, answer):
-        if self.current_question_index < len(self.questions):
-            self.user_answers.append(answer)
-            self.current_question_index += 1
-
-    def validate_answers(self):
-        correct_answers = [q['correct_answer'] for q in self.questions]
-        score = sum(1 for i, answer in enumerate(self.user_answers) if answer == correct_answers[i])
-        return score, len(self.questions)
+        # Beispiel für die Verarbeitung der API-Antwort
+        # Stelle sicher, dass die API-Antwort ein JSON-ähnliches Format hat
+        return {
+            "question": response.get("question", "No question available."),
+            "answers": response.get("answers", ["Option 1", "Option 2", "Option 3", "Option 4"]),
+            "correct_answer": response.get("correct_answer", "Option 1")
+        }
